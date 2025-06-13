@@ -19,4 +19,5 @@ export const components = {
   InputSearch: dynamic(() => import('./InputSearch')),
   AppleNavigation: dynamic(() => import('./AppleNavigation')),
   Tabs: dynamic(() => import('./Tabs')),
+  LoginForm: dynamic(() => import("./LoginForm")),
 };
