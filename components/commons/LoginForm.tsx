@@ -2,6 +2,7 @@
 'use client'
 import React, { MouseEventHandler, useState } from 'react';
 import _ from 'lodash';
+import { useRouter } from 'next/navigation';
 
 interface OnClickProps {
   id?: string;
@@ -31,6 +32,10 @@ const CarLoginComponent: React.FC<OnClickProps> = ({
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  
+  const router = useRouter();
 
   const safeData = data ?? {};
   const title = _.get(data, 'title', 'Login');
@@ -38,17 +43,61 @@ const CarLoginComponent: React.FC<OnClickProps> = ({
 
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEmail(e.target.value);
+    setError('');
     props.onChangeEmail?.(e as any);
   };
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPassword(e.target.value);
+    setError('');
     props.onChangePassword?.(e as any);
   };
 
-  const handleLoginSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleLoginSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    props.onSubmitLogin?.(e as any);
+    setIsLoading(true);
+    setError('');
+
+    try {
+      const response = await fetch('https://car.blocktrend.xyz/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email,
+          password: password,
+        }),
+      });
+
+      const responseData = await response.json();
+
+      if (response.ok) {
+        // Store tokens in localStorage
+        const accessToken = _.get(responseData, 'data.accessToken');
+        const refreshToken = _.get(responseData, 'data.refreshToken');
+
+        if (accessToken) {
+          localStorage.setItem('accessToken', accessToken);
+        }
+        if (refreshToken) {
+          localStorage.setItem('refreshToken', refreshToken);
+        }
+
+        // Call the optional callback
+        props.onSubmitLogin?.(e as any);
+
+        // Redirect to /user
+        router.push('/user');
+      } else {
+        const errorMessage = _.get(responseData, 'message', 'Login failed. Please try again.');
+        setError(errorMessage);
+      }
+    } catch (err) {
+      setError('Network error. Please check your connection and try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleLoginClick = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -74,6 +123,12 @@ const CarLoginComponent: React.FC<OnClickProps> = ({
             <h1 className="text-4xl font-bold text-lime-600 mb-2">{title}</h1>
             <p className="text-gray-600 mb-8">{subtitle}</p>
             
+            {error && (
+              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-red-600 text-sm">{error}</p>
+              </div>
+            )}
+            
             <form onSubmit={handleLoginSubmit} className="space-y-6">
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">Email</label>
@@ -87,6 +142,7 @@ const CarLoginComponent: React.FC<OnClickProps> = ({
                   placeholder="Enter your email"
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-lime-500 focus:border-transparent outline-none transition-all"
                   required
+                  disabled={isLoading}
                 />
               </div>
               
@@ -102,6 +158,7 @@ const CarLoginComponent: React.FC<OnClickProps> = ({
                   placeholder="••••••••"
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-lime-500 focus:border-transparent outline-none transition-all"
                   required
+                  disabled={isLoading}
                 />
               </div>
               
@@ -112,6 +169,7 @@ const CarLoginComponent: React.FC<OnClickProps> = ({
                     checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
                     className="w-4 h-4 text-lime-600 bg-gray-100 border-gray-300 rounded focus:ring-lime-500 focus:ring-2"
+                    disabled={isLoading}
                   />
                   <span className="ml-2 text-sm text-gray-600">Remember me</span>
                 </label>
@@ -121,9 +179,20 @@ const CarLoginComponent: React.FC<OnClickProps> = ({
               <button
                 type="submit"
                 onClick={handleLoginClick}
-                className="w-full bg-lime-500 hover:bg-lime-600 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200"
+                disabled={isLoading}
+                className="w-full bg-lime-500 hover:bg-lime-600 disabled:bg-lime-300 disabled:cursor-not-allowed text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center"
               >
-                Login
+                {isLoading ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Signing In...
+                  </>
+                ) : (
+                  'Login'
+                )}
               </button>
             </form>
             
@@ -133,7 +202,8 @@ const CarLoginComponent: React.FC<OnClickProps> = ({
             
             <button
               onClick={handleGuestClick}
-              className="w-full mt-4 border-2 border-gray-300 text-gray-700 font-semibold py-3 px-4 rounded-lg hover:bg-gray-50 transition-colors duration-200"
+              disabled={isLoading}
+              className="w-full mt-4 border-2 border-gray-300 text-gray-700 font-semibold py-3 px-4 rounded-lg hover:bg-gray-50 disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors duration-200"
             >
               Continue as Guest
             </button>
