@@ -20,4 +20,5 @@ export const components = {
   AppleNavigation: dynamic(() => import('./AppleNavigation')),
   Tabs: dynamic(() => import('./Tabs')),
   LoginForm: dynamic(() => import("./LoginForm")),
+  RegisterForm: dynamic(() => import("./RegisterForm")),
 };
