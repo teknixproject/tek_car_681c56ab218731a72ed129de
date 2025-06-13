@@ -21,4 +21,5 @@ export const components = {
   Tabs: dynamic(() => import('./Tabs')),
   LoginForm: dynamic(() => import("./LoginForm")),
   RegisterForm: dynamic(() => import("./RegisterForm")),
+  ListCar: dynamic(() => import("./ListCar")),
 };
