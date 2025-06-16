@@ -18,4 +18,5 @@ export const components = {
   Tabs: dynamic(() => import('./Tabs')),
   Table: dynamic(() => import('./Table')),
   LoginForm: dynamic(() => import("./LoginForm")),
-  RegisterForm: dynamic(() => import("./RegisterForm")),};
+  RegisterForm: dynamic(() => import("./RegisterForm")),  Navigate: dynamic(() => import("./Navigate")),
+};
