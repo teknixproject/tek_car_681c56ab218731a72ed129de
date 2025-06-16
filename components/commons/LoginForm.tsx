@@ -205,7 +205,7 @@ const CarLoginComponent: React.FC<OnClickProps> = ({
               disabled={isLoading}
               className="w-full mt-4 border-2 border-gray-300 text-gray-700 font-semibold py-3 px-4 rounded-lg hover:bg-gray-50 disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors duration-200"
             >
-              Continue as Guest
+              Register
             </button>
           </div>
         </div>
