@@ -212,56 +212,9 @@ const CarLoginComponent: React.FC<OnClickProps> = ({
         
         {/* Car Image Section */}
         <div className="hidden lg:block lg:w-1/2 relative">
-          <div className="absolute inset-0 bg-gradient-to-br from-lime-400 to-lime-500"></div>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="relative">
-              {/* Watermark text */}
-              <div className="absolute inset-0 flex items-center justify-center opacity-10">
-                <span className="text-white text-6xl font-bold transform -rotate-12">MCLAREN</span>
-              </div>
-              
-              {/* Car placeholder - using SVG representation instead of img */}
+         
               <div className="relative z-10">
-                <svg
-                  width="400"
-                  height="250"
-                  viewBox="0 0 400 250"
-                  className="drop-shadow-2xl"
-                >
-                  {/* Car body */}
-                  <path
-                    d="M50 150 Q60 120 100 110 L200 105 Q250 100 300 110 Q340 120 350 150 L350 180 Q350 190 340 190 L320 190 Q310 200 290 200 Q270 200 260 190 L140 190 Q130 200 110 200 Q90 200 80 190 L60 190 Q50 190 50 180 Z"
-                    fill="#22c55e"
-                    stroke="#16a34a"
-                    strokeWidth="2"
-                  />
-                  
-                  {/* Windshield */}
-                  <path
-                    d="M100 110 Q120 90 180 85 Q220 85 250 90 Q280 95 300 110"
-                    fill="none"
-                    stroke="#374151"
-                    strokeWidth="3"
-                  />
-                  
-                  {/* Wheels */}
-                  <circle cx="110" cy="190" r="20" fill="#374151" />
-                  <circle cx="110" cy="190" r="12" fill="#6b7280" />
-                  <circle cx="290" cy="190" r="20" fill="#374151" />
-                  <circle cx="290" cy="190" r="12" fill="#6b7280" />
-                  
-                  {/* Headlight */}
-                  <ellipse cx="340" cy="140" rx="8" ry="12" fill="#fbbf24" />
-                  
-                  {/* Taillight */}
-                  <ellipse cx="60" cy="140" rx="8" ry="12" fill="#ef4444" />
-                  
-                  {/* License plate area */}
-                  <rect x="320" y="165" width="25" height="15" fill="white" stroke="#374151" strokeWidth="1" rx="2" />
-                  <text x="332" y="175" fontSize="8" fill="#ef4444" textAnchor="middle" fontWeight="bold">AKO</text>
-                </svg>
-              </div>
-            </div>
+                <img src='https://www.mioto.vn/static/media/thue_xe_oto_tu_lai_di_du_lich_gia_re.fde3ac82.png' className='h-full w-full'/>
           </div>
         </div>
       </div>
