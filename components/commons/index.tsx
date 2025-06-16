@@ -19,4 +19,5 @@ export const components = {
   Table: dynamic(() => import('./Table')),
   LoginForm: dynamic(() => import("./LoginForm")),
   RegisterForm: dynamic(() => import("./RegisterForm")),
+  CustomWidgete5372dc12fbe: dynamic(() => import("./CustomWidgete5372dc12fbe")),
 };
