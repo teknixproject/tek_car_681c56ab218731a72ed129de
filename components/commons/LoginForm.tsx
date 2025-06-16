@@ -109,7 +109,7 @@ const CarLoginComponent: React.FC<OnClickProps> = ({
   };
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br from-lime-300 to-lime-400 flex items-center justify-center p-4 ${className ?? ''}`} id={id} style={style}>
+    <div className={`min-h-screen flex items-center justify-center p-4 ${className ?? ''}`} id={id} style={style}>
       <div className="w-full max-w-5xl bg-white rounded-3xl shadow-2xl overflow-hidden flex">
         {/* Login Form Section */}
         <div className="w-full lg:w-1/2 p-8 lg:p-12 relative">
