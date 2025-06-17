@@ -17,7 +17,5 @@ export const components = {
   InputSearch: dynamic(() => import('./InputSearch')),
   Tabs: dynamic(() => import('./Tabs')),
   Table: dynamic(() => import('./Table')),
-  LoginForm: dynamic(() => import("./LoginForm")),
-  RegisterForm: dynamic(() => import("./RegisterForm")),  Navigate: dynamic(() => import("./Navigate")),
-  PanerHomePage: dynamic(() => import("./PanerHomePage")),
+  LoginForm: dynamic(() => import('./LoginForm')),
 };

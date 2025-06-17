@@ -1,27 +1,64 @@
 import _ from 'lodash';
 import { Metadata } from 'next';
+import Head from 'next/head';
+import { Fragment, Suspense } from 'react';
 
-import EntryPage from '@/components/page/EntryPage';
+import ClientWrapper from '@/components/grid-systems/ClientWrapGridSystem';
 
-import { fetchMetadata } from './actions/server';
+import { fetchMetadata } from '../actions/server';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-export default async function Home() {
-  return <EntryPage />;
+type Params = { uid: string[] };
+const handleParam = ({ uid }: { uid: string[] }) => {
+  
+  return { uid, param: uid };
+};
+export default async function Page({ params }: { params: Params }) {
+  const paramsProp = await params;
+  const uidParse = handleParam(paramsProp);
+  const metadata = await fetchMetadata(uidParse.uid);
+  const formMetadata = _.get(metadata, 'data.form');
+  const iconUrl = _.get(formMetadata, 'icon.icon') || '/favicon.ico';
+
+  try {
+    return (
+      <Suspense>
+        <Head>
+          <link rel="icon" href={iconUrl} type="image/png" />
+          <link rel="preload" href={iconUrl} as="image" />
+          <link
+            rel="apple-touch-icon"
+            href={_.get(formMetadata, 'icon.apple') || '/apple-icon.png'}
+          />
+          <link
+            rel="shortcut icon"
+            href={_.get(formMetadata, 'icon.shortcut') || '/shortcut-icon.png'}
+          />
+        </Head>
+        <Fragment>
+          <ClientWrapper layoutId={uidParse.uid} pathName={uidParse.uid} />
+        </Fragment>
+      </Suspense>
+    );
+  } catch (error) {
+    console.error('Page render error:', error);
+    throw new Error('Failed to load page');
+  }
 }
 
-export async function generateMetadata(): Promise<Metadata> {
-  const path = 'NextJS';
-
-  const metadata = await fetchMetadata(path);
+export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
+  const paramProps = await params;
+  const { uid } = handleParam(paramProps);
+  console.log('🚀 ~ generateMetadata ~ uid:', uid);
+  const metadata = await fetchMetadata(uid);
   const formMetadata = _.get(metadata, 'data.form');
 
   if (!formMetadata) {
     return {
-      title: 'NextJS',
-      description: 'NextJS 15',
+      title: uid,
+      description: uid,
     };
   }
   const iconConfig = {
@@ -32,18 +69,18 @@ export async function generateMetadata(): Promise<Metadata> {
 
   return {
     title: {
-      default: formMetadata?.title?.default || 'NextJS PAGE',
+      default: formMetadata?.title?.default || 'DYNAMIC PAGE',
       template: formMetadata?.title.template,
     },
-    description: formMetadata?.description || 'Default NextJS Page.',
+    description: formMetadata?.description || 'Default dynamic page.',
     keywords: formMetadata?.keywords,
     authors: formMetadata?.authors?.map((author: any) => ({
       name: author.name,
       url: author.url,
     })),
     openGraph: {
-      title: formMetadata?.openGraph?.title || 'NEXTJS PAGE',
-      description: formMetadata?.openGraph?.description || 'Default NextJS page.',
+      title: formMetadata?.openGraph?.title || 'DYNAMIC PAGE',
+      description: formMetadata?.openGraph?.description || 'Default dynamic page.',
       url: formMetadata?.openGraph?.url,
       siteName: formMetadata?.openGraph?.siteName,
       images: formMetadata?.openGraph?.images?.map((image: any) => ({
