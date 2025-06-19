@@ -21,4 +21,5 @@ export const components = {
   ListDrivers: dynamic(() => import('./ListDrivers')),
   ListCar: dynamic(() => import("./ListCar")),
   Verhicles: dynamic(() => import("./Verhicles")),
+  Schedules: dynamic(() => import("./Schedules")),
 };
