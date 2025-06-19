@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 'use client'
 import React, { useState, useEffect, MouseEventHandler } from 'react';
+import axios from 'axios';
 import _ from 'lodash';
 
 interface OnClickProps {
@@ -36,13 +37,13 @@ const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
   const getStatusText = (status: string) => {
     switch (status) {
       case 'processing':
-        return 'Đang xử lý';
+        return 'Processing';
       case 'waiting':
-        return 'Chờ xử lý';
+        return 'Waiting';
       case 'completed':
-        return 'Hoàn thành';
+        return 'Completed';
       case 'cancelled':
-        return 'Đã hủy';
+        return 'Cancelled';
       default:
         return status;
     }
@@ -70,15 +71,15 @@ const ScheduleCard: React.FC<{
   const totalDays = _.get(safeSchedule, 'total_days', '0');
   const vehicleName = _.get(safeSchedule, 'vehicle.name', 'N/A');
   const driverOption = _.get(safeSchedule, 'driver_option', '');
-  const driverName = _.get(safeSchedule, 'driver.full_name', 'Chưa phân công');
+  const driverName = _.get(safeSchedule, 'driver.full_name', 'Not Assigned');
 
   const formatDate = (dateString: string) => {
     if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString('vi-VN');
+    return new Date(dateString).toLocaleDateString('en-US');
   };
 
   const getDriverOptionText = (option: string) => {
-    return option === 'with_driver' ? 'Có tài xế' : 'Tự lái';
+    return option === 'with_driver' ? 'With Driver' : 'Self Drive';
   };
 
   return (
@@ -86,7 +87,7 @@ const ScheduleCard: React.FC<{
       <div className="flex justify-between items-start mb-4">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-2">
-            <h3 className="text-lg font-semibold text-gray-900">Lịch trình</h3>
+            <h3 className="text-lg font-semibold text-gray-900">Schedule</h3>
             <StatusBadge status={status} />
           </div>
           <p className="text-sm text-gray-500">ID: {id.substring(0, 8)}...</p>
@@ -95,7 +96,7 @@ const ScheduleCard: React.FC<{
           <button
             onClick={onClickView}
             className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-            title="Xem chi tiết"
+            title="View Details"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -105,7 +106,7 @@ const ScheduleCard: React.FC<{
           <button
             onClick={onClickEdit}
             className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-            title="Chỉnh sửa"
+            title="Edit"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -114,7 +115,7 @@ const ScheduleCard: React.FC<{
           <button
             onClick={onClickDelete}
             className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-            title="Xóa"
+            title="Delete"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -126,34 +127,34 @@ const ScheduleCard: React.FC<{
       <div className="space-y-3">
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <p className="text-sm font-medium text-gray-500">Ngày bắt đầu</p>
+            <p className="text-sm font-medium text-gray-500">Start Date</p>
             <p className="text-sm text-gray-900">{formatDate(startDate)}</p>
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-500">Ngày kết thúc</p>
+            <p className="text-sm font-medium text-gray-500">End Date</p>
             <p className="text-sm text-gray-900">{formatDate(endDate)}</p>
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <p className="text-sm font-medium text-gray-500">Tổng số ngày</p>
-            <p className="text-sm text-gray-900">{totalDays} ngày</p>
+            <p className="text-sm font-medium text-gray-500">Total Days</p>
+            <p className="text-sm text-gray-900">{totalDays} days</p>
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-500">Phương tiện</p>
+            <p className="text-sm font-medium text-gray-500">Vehicle</p>
             <p className="text-sm text-gray-900">{vehicleName}</p>
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <p className="text-sm font-medium text-gray-500">Tùy chọn lái xe</p>
+            <p className="text-sm font-medium text-gray-500">Driving Option</p>
             <p className="text-sm text-gray-900">{getDriverOptionText(driverOption)}</p>
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-500">Tài xế</p>
-            <p className="text-sm text-gray-900">{driverName || 'Chưa phân công'}</p>
+            <p className="text-sm font-medium text-gray-500">Driver</p>
+            <p className="text-sm text-gray-900">{driverName || 'Not Assigned'}</p>
           </div>
         </div>
       </div>
@@ -171,9 +172,9 @@ const ScheduleHeader: React.FC<{
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Quản lý lịch trình</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Schedule Management</h1>
           <p className="text-gray-500 mt-1">
-            Hiển thị {total} lịch trình - Trang {currentPage}
+            Showing {total} schedules - Page {currentPage}
           </p>
         </div>
         <button
@@ -183,7 +184,7 @@ const ScheduleHeader: React.FC<{
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
-          Làm mới
+          Refresh
         </button>
       </div>
     </div>
@@ -206,8 +207,8 @@ const EmptyState: React.FC = () => {
       <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
       </svg>
-      <h3 className="mt-4 text-lg font-medium text-gray-900">Không có lịch trình nào</h3>
-      <p className="mt-2 text-gray-500">Chưa có lịch trình nào được tạo.</p>
+      <h3 className="mt-4 text-lg font-medium text-gray-900">No Schedules Found</h3>
+      <p className="mt-2 text-gray-500">No schedules have been created yet.</p>
     </div>
   );
 };
@@ -219,14 +220,14 @@ const AuthError: React.FC<{ onRetry?: () => void }> = ({ onRetry }) => {
       <svg className="mx-auto h-12 w-12 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
       </svg>
-      <h3 className="mt-4 text-lg font-medium text-gray-900">Cần đăng nhập</h3>
-      <p className="mt-2 text-gray-500">Vui lòng đăng nhập để xem danh sách lịch trình.</p>
+      <h3 className="mt-4 text-lg font-medium text-gray-900">Authentication Required</h3>
+      <p className="mt-2 text-gray-500">Please login to view schedules.</p>
       {onRetry && (
         <button
           onClick={onRetry}
           className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
         >
-          Thử lại
+          Retry
         </button>
       )}
     </div>
@@ -264,6 +265,19 @@ const ScheduleManagement: React.FC<OnClickProps> = ({
     }
   };
 
+  // Configure axios instance
+  const createAxiosInstance = () => {
+    const accessToken = getAccessToken();
+    return axios.create({
+      baseURL: 'https://car.blocktrend.xyz/api',
+      timeout: 10000,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(accessToken && { 'Authorization': `Bearer ${accessToken}` })
+      }
+    });
+  };
+
   useEffect(() => {
     if (_.isArray(initialSchedules) && initialSchedules.length > 0) {
       setSchedules(initialSchedules);
@@ -287,34 +301,12 @@ const ScheduleManagement: React.FC<OnClickProps> = ({
         return;
       }
 
-      const headers: HeadersInit = {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${accessToken}`
-      };
-
-      const response = await fetch('https://car.blocktrend.xyz/api/schedule/list', {
-        method: 'GET',
-        headers
-      });
+      const axiosInstance = createAxiosInstance();
       
-      if (!response.ok) {
-        if (response.status === 401 || response.status === 403) {
-          setAuthError(true);
-          // Optionally clear invalid token
-          try {
-            localStorage.removeItem('accessToken');
-          } catch (error) {
-            console.error('Error removing invalid token:', error);
-          }
-          return;
-        }
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
+      const response = await axiosInstance.get('/schedule/list');
       
-      const result = await response.json();
-      
-      if (result.status === 'success') {
-        const scheduleData = _.get(result, 'data', []);
+      if (response.data?.status === 'success') {
+        const scheduleData = _.get(response.data, 'data', []);
         
         if (_.isArray(scheduleData)) {
           setSchedules(scheduleData);
@@ -322,11 +314,27 @@ const ScheduleManagement: React.FC<OnClickProps> = ({
           setSchedules([]);
         }
       } else {
-        throw new Error(result.message || 'Failed to fetch schedules');
+        throw new Error(response.data?.message || 'Failed to fetch schedules');
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Không thể tải danh sách lịch trình';
-      setError(errorMessage);
+      if (axios.isAxiosError(err)) {
+        if (err.response?.status === 401 || err.response?.status === 403) {
+          setAuthError(true);
+          // Clear invalid token
+          try {
+            localStorage.removeItem('accessToken');
+          } catch (error) {
+            console.error('Error removing invalid token:', error);
+          }
+          return;
+        }
+        
+        const errorMessage = err.response?.data?.message || err.message || 'Failed to fetch schedules';
+        setError(errorMessage);
+      } else {
+        const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
+        setError(errorMessage);
+      }
       console.error('Error fetching schedules:', err);
     } finally {
       setLoading(false);
@@ -390,6 +398,52 @@ const ScheduleManagement: React.FC<OnClickProps> = ({
               onClick={() => fetchSchedules()}
               className="ml-4 px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700 transition-colors"
             >
-              Thử lại
+              Retry
             </button>
-          </div
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div id={id} style={style} className={`container mx-auto p-6 ${className ?? ''}`}>
+      <ScheduleHeader
+        total={total || schedules.length}
+        currentPage={currentPage}
+        onClickRefresh={handleRefresh}
+      />
+
+      {schedules.length === 0 ? (
+        <EmptyState />
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {schedules.map((schedule) => {
+            const scheduleId = _.get(schedule, 'id', '');
+            return (
+              <ScheduleCard
+                key={scheduleId}
+                schedule={schedule}
+                onClickView={handleScheduleAction(scheduleId, 'view')}
+                onClickEdit={handleScheduleAction(scheduleId, 'edit')}
+                onClickDelete={handleScheduleAction(scheduleId, 'delete')}
+              />
+            );
+          })}
+        </div>
+      )}
+
+      {maxPage > 1 && (
+        <div className="flex justify-center mt-8">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <p className="text-sm text-gray-500">
+              Page {currentPage} of {maxPage} - Total {total} schedules
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default ScheduleManagement;
