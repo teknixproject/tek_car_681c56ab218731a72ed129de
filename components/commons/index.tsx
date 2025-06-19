@@ -17,5 +17,5 @@ export const components = {
   InputSearch: dynamic(() => import('./InputSearch')),
   Tabs: dynamic(() => import('./Tabs')),
   Table: dynamic(() => import('./Table')),
-  LoginForm: dynamic(() => import('./LoginForm')),  ListDrivers: dynamic(() => import("./ListDrivers")),
+  LoginForm: dynamic(() => import('./LoginForm')),
 };
