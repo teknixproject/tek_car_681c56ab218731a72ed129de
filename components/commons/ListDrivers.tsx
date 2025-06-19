@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-'use client'
-import React, { MouseEventHandler, useState, useEffect } from 'react';
+'use client';
 import _ from 'lodash';
+import React, { MouseEventHandler, useEffect, useState } from 'react';
 
 interface OnClickProps {
   id?: string;
@@ -66,7 +66,9 @@ const DriverCard: React.FC<{
           <h3 className="text-lg font-semibold text-gray-900">{fullName}</h3>
           <p className="text-gray-600 text-sm">{email}</p>
         </div>
-        <div className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(status)}`}>
+        <div
+          className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(status)}`}
+        >
           {status.replace('-', ' ').toUpperCase()}
         </div>
       </div>
@@ -131,7 +133,7 @@ const DriverListHeader: React.FC<{
           onClick={onClickRefresh}
           disabled={loading}
           className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
-            loading 
+            loading
               ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
               : 'bg-blue-500 text-white hover:bg-blue-600'
           }`}
@@ -157,10 +159,10 @@ const DriverListHeader: React.FC<{
 };
 
 // Error Component
-const ErrorMessage: React.FC<{ message: string; onClickRetry?: MouseEventHandler<HTMLElement> }> = ({ 
-  message, 
-  onClickRetry 
-}) => {
+const ErrorMessage: React.FC<{
+  message: string;
+  onClickRetry?: MouseEventHandler<HTMLElement>;
+}> = ({ message, onClickRetry }) => {
   return (
     <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
       <div className="text-red-600 text-lg font-semibold mb-2">Error Loading Drivers</div>
@@ -186,14 +188,7 @@ const LoadingSpinner: React.FC = () => {
 };
 
 // Main Component
-const DriverList: React.FC<OnClickProps> = ({
-  id,
-  style,
-  className,
-  data,
-  items,
-  ...props
-}) => {
+const DriverList: React.FC<OnClickProps> = ({ id, style, className, data, items, ...props }) => {
   const [driverData, setDriverData] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -202,10 +197,10 @@ const DriverList: React.FC<OnClickProps> = ({
     try {
       setLoading(true);
       setError(null);
-      
+
       // Get access token from localStorage
       const accessToken = localStorage.getItem('accessToken');
-      
+
       if (!accessToken) {
         throw new Error('Access token not found. Please login first.');
       }
@@ -213,7 +208,7 @@ const DriverList: React.FC<OnClickProps> = ({
       const response = await fetch('https://car.blocktrend.xyz/api/driver/list', {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${accessToken}`,
+          Authorization: `Bearer ${accessToken}`,
           'Content-Type': 'application/json',
         },
       });
@@ -275,10 +270,7 @@ const DriverList: React.FC<OnClickProps> = ({
         />
 
         {error ? (
-          <ErrorMessage
-            message={error}
-            onClickRetry={handleRefresh}
-          />
+          <ErrorMessage message={error} onClickRetry={handleRefresh} />
         ) : loading ? (
           <LoadingSpinner />
         ) : drivers.length === 0 ? (
