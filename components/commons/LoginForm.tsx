@@ -91,7 +91,7 @@ const roleName = _.get(responseData, 'data.role.name');
         props.onSubmitLogin?.(e as any);
 
         // Redirect to /user
-        router.push(`/${roleName}`);
+        router.push(`/${roleName?.toLowerCase()}`);
       } else {
         const errorMessage = _.get(responseData, 'message', 'Login failed. Please try again.');
         setError(errorMessage);
