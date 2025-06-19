@@ -54,7 +54,7 @@ const VehicleCard: React.FC<{
       <div className="mb-4 h-40 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
         {thumbnail ? (
           <img 
-            src={`https://car.blocktrend.xyz/api/file/${thumbnail}`}
+            src={`${thumbnail}`}
             alt={name}
             className="w-full h-full object-cover"
           />
