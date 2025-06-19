@@ -212,6 +212,27 @@ const EmptyState: React.FC = () => {
   );
 };
 
+// Auth Error Component
+const AuthError: React.FC<{ onRetry?: () => void }> = ({ onRetry }) => {
+  return (
+    <div className="text-center py-12">
+      <svg className="mx-auto h-12 w-12 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+      </svg>
+      <h3 className="mt-4 text-lg font-medium text-gray-900">Cần đăng nhập</h3>
+      <p className="mt-2 text-gray-500">Vui lòng đăng nhập để xem danh sách lịch trình.</p>
+      {onRetry && (
+        <button
+          onClick={onRetry}
+          className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          Thử lại
+        </button>
+      )}
+    </div>
+  );
+};
+
 // Main Component
 const ScheduleManagement: React.FC<OnClickProps> = ({
   id,
@@ -224,12 +245,24 @@ const ScheduleManagement: React.FC<OnClickProps> = ({
   const [schedules, setSchedules] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [authError, setAuthError] = useState(false);
 
   const safeData = data ?? {};
   const initialSchedules = _.get(safeData, 'data', []);
   const total = _.get(safeData, 'total', 0);
   const currentPage = _.get(safeData, 'currentPage', 1);
   const maxPage = _.get(safeData, 'maxPage', 1);
+
+  // Get access token from localStorage safely
+  const getAccessToken = (): string | null => {
+    if (typeof window === 'undefined') return null;
+    try {
+      return localStorage.getItem('accessToken');
+    } catch (error) {
+      console.error('Error accessing localStorage:', error);
+      return null;
+    }
+  };
 
   useEffect(() => {
     if (_.isArray(initialSchedules) && initialSchedules.length > 0) {
@@ -244,20 +277,56 @@ const ScheduleManagement: React.FC<OnClickProps> = ({
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch('https://car.blocktrend.xyz/api/schedule/list');
+      setAuthError(false);
+
+      const accessToken = getAccessToken();
+      
+      if (!accessToken) {
+        setAuthError(true);
+        setLoading(false);
+        return;
+      }
+
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`
+      };
+
+      const response = await fetch('https://car.blocktrend.xyz/api/schedule/list', {
+        method: 'GET',
+        headers
+      });
       
       if (!response.ok) {
-        throw new Error('Failed to fetch schedules');
+        if (response.status === 401 || response.status === 403) {
+          setAuthError(true);
+          // Optionally clear invalid token
+          try {
+            localStorage.removeItem('accessToken');
+          } catch (error) {
+            console.error('Error removing invalid token:', error);
+          }
+          return;
+        }
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
       
       const result = await response.json();
-      const scheduleData = _.get(result, 'data', []);
       
-      if (_.isArray(scheduleData)) {
-        setSchedules(scheduleData);
+      if (result.status === 'success') {
+        const scheduleData = _.get(result, 'data', []);
+        
+        if (_.isArray(scheduleData)) {
+          setSchedules(scheduleData);
+        } else {
+          setSchedules([]);
+        }
+      } else {
+        throw new Error(result.message || 'Failed to fetch schedules');
       }
     } catch (err) {
-      setError('Không thể tải danh sách lịch trình');
+      const errorMessage = err instanceof Error ? err.message : 'Không thể tải danh sách lịch trình';
+      setError(errorMessage);
       console.error('Error fetching schedules:', err);
     } finally {
       setLoading(false);
@@ -298,59 +367,29 @@ const ScheduleManagement: React.FC<OnClickProps> = ({
     );
   }
 
-  if (error) {
+  if (authError) {
     return (
       <div id={id} style={style} className={`container mx-auto p-6 ${className ?? ''}`}>
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <div className="flex items-center">
-            <svg className="h-5 w-5 text-red-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-            </svg>
-            <p className="text-red-800">{error}</p>
-          </div>
-        </div>
+        <AuthError onRetry={() => fetchSchedules()} />
       </div>
     );
   }
 
-  return (
-    <div id={id} style={style} className={`container mx-auto p-6 ${className ?? ''}`}>
-      <ScheduleHeader
-        total={total || schedules.length}
-        currentPage={currentPage}
-        onClickRefresh={handleRefresh}
-      />
-
-      {schedules.length === 0 ? (
-        <EmptyState />
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {schedules.map((schedule) => {
-            const scheduleId = _.get(schedule, 'id', '');
-            return (
-              <ScheduleCard
-                key={scheduleId}
-                schedule={schedule}
-                onClickView={handleScheduleAction(scheduleId, 'view')}
-                onClickEdit={handleScheduleAction(scheduleId, 'edit')}
-                onClickDelete={handleScheduleAction(scheduleId, 'delete')}
-              />
-            );
-          })}
-        </div>
-      )}
-
-      {maxPage > 1 && (
-        <div className="flex justify-center mt-8">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-            <p className="text-sm text-gray-500">
-              Trang {currentPage} / {maxPage} - Tổng {total} lịch trình
-            </p>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
-
-export default ScheduleManagement;
+  if (error) {
+    return (
+      <div id={id} style={style} className={`container mx-auto p-6 ${className ?? ''}`}>
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <svg className="h-5 w-5 text-red-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+              <p className="text-red-800">{error}</p>
+            </div>
+            <button
+              onClick={() => fetchSchedules()}
+              className="ml-4 px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700 transition-colors"
+            >
+              Thử lại
+            </button>
+          </div
