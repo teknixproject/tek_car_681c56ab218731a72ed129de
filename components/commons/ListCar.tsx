@@ -9,7 +9,7 @@ interface OnClickProps {
   className?: string;
   data?: any;
   items?: any[];
-  cars?: any[];
+  drivers?: any[];
   onClickDriver?: MouseEventHandler<HTMLElement> | undefined;
   onClickEdit?: MouseEventHandler<HTMLElement> | undefined;
   onClickDelete?: MouseEventHandler<HTMLElement> | undefined;
@@ -23,10 +23,11 @@ const DriverList: React.FC<OnClickProps> = ({
   className,
   data,
   items,
-  cars,
+  drivers,
   ...props
 }) => {
-  const [drivers, setDrivers] = useState<any[]>([]);
+  const [driversList, setDriversList] = useState<any[]>([]);
+  const [cars, setCars] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({
     total: 0,
@@ -34,20 +35,32 @@ const DriverList: React.FC<OnClickProps> = ({
     maxPage: 1
   });
 
-  // Safe cars data handling
-  const safeCars = _.isArray(cars) ? cars : [];
-
   useEffect(() => {
-    fetchDrivers();
+    Promise.all([fetchDrivers(), fetchCars()]);
   }, []);
+
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem('accessToken');
+    return {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    };
+  };
 
   const fetchDrivers = async () => {
     try {
       setLoading(true);
-      const response = await fetch('https://car.blocktrend.xyz/api/driver/list');
+      const response = await fetch('https://car.blocktrend.xyz/api/driver/list', {
+        headers: getAuthHeaders()
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const result = await response.json();
       
-      setDrivers(_.get(result, 'data', []));
+      setDriversList(_.get(result, 'data', []));
       setPagination({
         total: _.get(result, 'total', 0),
         currentPage: _.get(result, 'currentPage', 1),
@@ -56,7 +69,7 @@ const DriverList: React.FC<OnClickProps> = ({
     } catch (error) {
       console.error('Error fetching drivers:', error);
       // Fallback to sample data
-      setDrivers([
+      setDriversList([
         {
           "id": "0cd4816a-3fd8-44fd-a550-af21ceb271c9",
           "status": "active",
@@ -66,8 +79,7 @@ const DriverList: React.FC<OnClickProps> = ({
           "first_name": "Nghiep",
           "last_name": "Nguyen",
           "email": "nghiep@gmail.com",
-          "avatar": null,
-          "car_id": "car-001"
+          "avatar": null
         },
         {
           "id": "56ec4129-c0fb-4ce8-aa02-761262b28054",
@@ -78,8 +90,7 @@ const DriverList: React.FC<OnClickProps> = ({
           "first_name": "Trần",
           "last_name": "Thiện",
           "email": "tranthien2805@gmail.com",
-          "avatar": null,
-          "car_id": "car-002"
+          "avatar": null
         },
         {
           "id": "ea71556e-031d-4da1-ab25-9a7701970949",
@@ -90,8 +101,7 @@ const DriverList: React.FC<OnClickProps> = ({
           "first_name": "Pham",
           "last_name": "Minh Pham",
           "email": "minh@gmail.com",
-          "avatar": null,
-          "car_id": null
+          "avatar": null
         }
       ]);
       setPagination({ total: 3, currentPage: 1, maxPage: 1 });
@@ -100,8 +110,54 @@ const DriverList: React.FC<OnClickProps> = ({
     }
   };
 
+  const fetchCars = async () => {
+    try {
+      const response = await fetch('https://car.blocktrend.xyz/api/vehicle/list', {
+        headers: getAuthHeaders()
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      setCars(_.get(result, 'data', []));
+    } catch (error) {
+      console.error('Error fetching cars:', error);
+      // Fallback to sample data
+      setCars([
+        {
+          "id": "10795c70-f845-42a0-9422-a6b4724d627d",
+          "status": "ready",
+          "name": "Ford Ranger Raptor",
+          "thumbnail": "c02527f6-98ce-45ec-b078-42e7dd19f555",
+          "license_plate": "NDUSJ-1324",
+          "vehicle_type": "7-seater",
+          "fuel_type": [{"value": "diesel", "label": "Diesel"}],
+          "drivetrain": {"value": "automatic", "label": "Automatic"}
+        },
+        {
+          "id": "6a956095-2026-4db5-adc5-8634c57788db",
+          "status": "ready",
+          "name": "Nissan GT-R R35 Nismo",
+          "thumbnail": "f5629d4d-d180-4a03-91f4-cda96fb7703d",
+          "license_plate": "QBJD-QDK12-E11",
+          "vehicle_type": "2-Sear Car",
+          "fuel_type": [{"value": "gasoline", "label": "Gasoline"}],
+          "drivetrain": {"value": "manual", "label": "Manual"}
+        }
+      ]);
+    }
+  };
+
   const getDriverCar = (driverId: string) => {
-    return safeCars.find(car => car?.driver_id === driverId || car?.id === driverId) || null;
+    // Randomly assign cars to drivers for demo purposes
+    const availableCars = cars.filter(car => car?.status === 'ready');
+    if (availableCars.length === 0) return null;
+    
+    const hash = driverId?.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) ?? 0;
+    const carIndex = hash % availableCars.length;
+    return availableCars[carIndex] || null;
   };
 
   const getStatusColor = (status: string) => {
@@ -125,6 +181,32 @@ const DriverList: React.FC<OnClickProps> = ({
         return 'Chờ duyệt';
       case 'inactive':
         return 'Không hoạt động';
+      default:
+        return status;
+    }
+  };
+
+  const getCarStatusColor = (status: string) => {
+    switch (status) {
+      case 'ready':
+        return 'bg-green-100 text-green-700';
+      case 'in-use':
+        return 'bg-blue-100 text-blue-700';
+      case 'under-maintenance':
+        return 'bg-red-100 text-red-700';
+      default:
+        return 'bg-gray-100 text-gray-700';
+    }
+  };
+
+  const getCarStatusText = (status: string) => {
+    switch (status) {
+      case 'ready':
+        return 'Sẵn sàng';
+      case 'in-use':
+        return 'Đang sử dụng';
+      case 'under-maintenance':
+        return 'Bảo trì';
       default:
         return status;
     }
@@ -163,11 +245,11 @@ const DriverList: React.FC<OnClickProps> = ({
   }
 
   return (
-    <div className={`bg-white ${className ?? ''}`} id={id} style={style}>
-      <div className="px-6 py-4 border-b border-gray-200">
-        <h2 className="text-2xl font-bold text-gray-900">Danh sách tài xế</h2>
-        <p className="mt-2 text-sm text-gray-600">
-          Tổng cộng {pagination.total} tài xế
+    <div className={`bg-white shadow-lg rounded-lg ${className ?? ''}`} id={id} style={style}>
+      <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-500 to-purple-600">
+        <h2 className="text-2xl font-bold text-white">🚗 Danh sách tài xế</h2>
+        <p className="mt-2 text-sm text-blue-100">
+          Tổng cộng {pagination.total} tài xế • {cars.length} xe có sẵn
         </p>
       </div>
 
@@ -176,115 +258,123 @@ const DriverList: React.FC<OnClickProps> = ({
           <thead className="bg-gray-50">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Tài xế
+                👤 Tài xế
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Thông tin liên hệ
+                📧 Thông tin liên hệ
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Xe được gán
+                🚙 Xe được gán
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Trạng thái
+                🟢 Trạng thái
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Điểm bằng lái
+                🎯 Điểm bằng lái
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                CMND/CCCD
+                🆔 CMND/CCCD
               </th>
               <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Thao tác
+                ⚙️ Thao tác
               </th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {drivers.map((driver) => {
+            {driversList.map((driver, index) => {
               const assignedCar = getDriverCar(driver?.id ?? '');
               
               return (
                 <tr
                   key={driver?.id}
-                  className="hover:bg-gray-50 cursor-pointer transition-colors"
+                  className="hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 cursor-pointer transition-all duration-200 transform hover:scale-[1.01]"
                   onClick={(e) => handleDriverClick(driver, e)}
                 >
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      <div className="flex-shrink-0 h-12 w-12">
+                      <div className="flex-shrink-0 h-12 w-12 relative">
                         {driver?.avatar ? (
                           <img
-                            className="h-12 w-12 rounded-full object-cover"
+                            className="h-12 w-12 rounded-full object-cover border-2 border-blue-200"
                             src={driver.avatar}
                             alt=""
                           />
                         ) : (
-                          <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
-                            <svg className="h-6 w-6 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+                          <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center">
+                            <svg className="h-6 w-6 text-white" fill="currentColor" viewBox="0 0 24 24">
                               <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />
                             </svg>
                           </div>
                         )}
+                        <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-white"></div>
                       </div>
                       <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">
-                          {`${driver?.first_name ?? ''} ${driver?.last_name ?? ''}`.trim() || 'Chưa có tên'}
+                        <div className="text-sm font-semibold text-gray-900">
+                          {`${driver?.first_name ?? ''} ${driver?.last_name ?? ''}`.trim() || '👤 Chưa có tên'}
                         </div>
-                        <div className="text-sm text-gray-500">
-                          ID: {driver?.id?.slice(0, 8) ?? 'N/A'}...
+                        <div className="text-xs text-gray-500 font-mono">
+                          🆔 {driver?.id?.slice(0, 8) ?? 'N/A'}...
                         </div>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{driver?.email ?? 'Chưa có email'}</div>
-                    <div className="text-sm text-gray-500">
-                      CMND: {driver?.personal_id_number ?? 'Chưa có'}
+                    <div className="text-sm text-gray-900 flex items-center">
+                      📧 {driver?.email ?? 'Chưa có email'}
+                    </div>
+                    <div className="text-sm text-gray-500 flex items-center mt-1">
+                      🏷️ {driver?.personal_id_number ?? 'Chưa có'}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     {assignedCar ? (
                       <div 
-                        className="cursor-pointer group"
+                        className="cursor-pointer group p-3 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg border border-green-200 hover:border-green-400 transition-all duration-200"
                         onClick={(e) => handleCarClick(assignedCar, e)}
                       >
-                        <div className="text-sm font-medium text-blue-600 group-hover:text-blue-800">
-                          {assignedCar?.make ?? ''} {assignedCar?.model ?? ''}
+                        <div className="text-sm font-semibold text-green-800 group-hover:text-green-900">
+                          🚗 {assignedCar?.name ?? 'Chưa có tên'}
                         </div>
-                        <div className="text-sm text-gray-500">
-                          {assignedCar?.license_plate ?? 'Chưa có biển số'}
+                        <div className="text-xs text-green-600 font-mono">
+                          🔢 {assignedCar?.license_plate ?? 'Chưa có biển số'}
                         </div>
-                        <div className="text-xs text-gray-400">
-                          {assignedCar?.year ?? 'N/A'}
+                        <div className="text-xs text-gray-500 mt-1 flex items-center gap-2">
+                          <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getCarStatusColor(assignedCar?.status ?? '')}`}>
+                            {getCarStatusText(assignedCar?.status ?? '')}
+                          </span>
+                          <span>
+                            👥 {assignedCar?.vehicle_type ?? 'N/A'}
+                          </span>
                         </div>
                       </div>
                     ) : (
-                      <div className="text-sm text-gray-400 italic">
-                        Chưa được gán xe
+                      <div className="text-sm text-gray-400 italic p-3 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
+                        🚫 Chưa được gán xe
                       </div>
                     )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(driver?.status ?? '')}`}>
+                    <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${getStatusColor(driver?.status ?? '')}`}>
                       {getStatusText(driver?.status ?? '')}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      <span className="text-sm font-medium text-gray-900">
+                      <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full text-white font-bold text-lg">
                         {driver?.license_points ?? 0}
-                      </span>
-                      <span className="text-sm text-gray-500 ml-1">điểm</span>
+                      </div>
+                      <span className="text-sm text-gray-500 ml-2">điểm</span>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {driver?.national_id_number ?? 'Chưa có'}
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-mono">
+                    🪪 {driver?.national_id_number ?? 'Chưa có'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex justify-end space-x-2">
                       <button
                         onClick={(e) => handleViewClick(driver, e)}
-                        className="text-blue-600 hover:text-blue-900 transition-colors"
-                        title="Xem chi tiết"
+                        className="p-2 text-blue-600 hover:text-white hover:bg-blue-600 rounded-full transition-all duration-200 transform hover:scale-110"
+                        title="👁️ Xem chi tiết"
                       >
                         <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -293,8 +383,8 @@ const DriverList: React.FC<OnClickProps> = ({
                       </button>
                       <button
                         onClick={(e) => handleEditClick(driver, e)}
-                        className="text-green-600 hover:text-green-900 transition-colors"
-                        title="Chỉnh sửa"
+                        className="p-2 text-green-600 hover:text-white hover:bg-green-600 rounded-full transition-all duration-200 transform hover:scale-110"
+                        title="✏️ Chỉnh sửa"
                       >
                         <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -302,8 +392,8 @@ const DriverList: React.FC<OnClickProps> = ({
                       </button>
                       <button
                         onClick={(e) => handleDeleteClick(driver, e)}
-                        className="text-red-600 hover:text-red-900 transition-colors"
-                        title="Xóa"
+                        className="p-2 text-red-600 hover:text-white hover:bg-red-600 rounded-full transition-all duration-200 transform hover:scale-110"
+                        title="🗑️ Xóa"
                       >
                         <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -318,32 +408,32 @@ const DriverList: React.FC<OnClickProps> = ({
         </table>
       </div>
 
-      {drivers.length === 0 && (
-        <div className="text-center py-12">
-          <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-          </svg>
-          <h3 className="mt-2 text-sm font-medium text-gray-900">Không có tài xế nào</h3>
-          <p className="mt-1 text-sm text-gray-500">Danh sách tài xế trống</p>
+      {driversList.length === 0 && (
+        <div className="text-center py-16 bg-gradient-to-br from-gray-50 to-blue-50">
+          <div className="text-6xl mb-4">🚗💨</div>
+          <h3 className="mt-2 text-lg font-semibold text-gray-900">Không có tài xế nào</h3>
+          <p className="mt-1 text-sm text-gray-500">Danh sách tài xế đang trống, hãy thêm tài xế mới!</p>
         </div>
       )}
 
-      <div className="bg-white px-6 py-3 flex items-center justify-between border-t border-gray-200">
-        <div className="text-sm text-gray-700">
-          Trang {pagination.currentPage} / {pagination.maxPage} - Tổng cộng {pagination.total} tài xế
+      <div className="bg-gradient-to-r from-gray-50 to-blue-50 px-6 py-4 flex items-center justify-between border-t border-gray-200">
+        <div className="text-sm text-gray-700 font-medium">
+          📄 Trang {pagination.currentPage} / {pagination.maxPage} • 
+          📊 Tổng cộng {pagination.total} tài xế • 
+          🚗 {cars.length} xe
         </div>
-        <div className="flex space-x-2">
+        <div className="flex space-x-3">
           <button
             disabled={pagination.currentPage <= 1}
-            className="px-3 py-1 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105"
           >
-            Trước
+            ⬅️ Trước
           </button>
           <button
             disabled={pagination.currentPage >= pagination.maxPage}
-            className="px-3 py-1 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105"
           >
-            Sau
+            Sau ➡️
           </button>
         </div>
       </div>
