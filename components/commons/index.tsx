@@ -22,4 +22,5 @@ export const components = {
   ListCar: dynamic(() => import("./ListCar")),
   Verhicles: dynamic(() => import("./Verhicles")),
   Schedules: dynamic(() => import("./Schedules")),
+  Billings: dynamic(() => import("./Billings")),
 };
