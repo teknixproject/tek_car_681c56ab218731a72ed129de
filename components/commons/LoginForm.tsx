@@ -74,14 +74,14 @@ const CarLoginComponent: React.FC<OnClickProps> = ({
 
       if (response.ok) {
         // Store tokens in localStorage
-        const accessToken = _.get(responseData, 'data.accessToken');
-        const refreshToken = _.get(responseData, 'data.refreshToken');
-const roleName = _.get(responseData, 'data.role.name');
+        const accessToken = _.get(responseData, 'data.access_token');
+        const refreshToken = _.get(responseData, 'data.refresh_token');
+const roleName = _.get(responseData, 'data.role_obj.name');
         if (accessToken) {
-          localStorage.setItem('access_token', accessToken);
+          localStorage.setItem('accessToken', accessToken);
         }
         if (refreshToken) {
-          localStorage.setItem('access_token', refreshToken);
+          localStorage.setItem('refreshToken', refreshToken);
         }
          if (roleName) {
           localStorage.setItem('role', roleName);
