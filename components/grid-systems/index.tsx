@@ -41,6 +41,7 @@ export const RenderSlice: React.FC<TRenderSlice> = ({ slice, isMenu }) => {
     if (!_.isEmpty(onPageLoad)) {
       handleAction('onPageLoad');
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onPageLoad]);
   useEffect(() => {
     if (
@@ -112,6 +113,7 @@ export const RenderSlice: React.FC<TRenderSlice> = ({ slice, isMenu }) => {
         data={sliceRef}
         childs={sliceRef?.childs}
         styleDevice={styleDevice}
+        pathname={pathname}
         {...multiples}
       />
     </>
@@ -138,7 +140,6 @@ export const RenderSlice: React.FC<TRenderSlice> = ({ slice, isMenu }) => {
 
 //#region Render Grid
 export const RenderGrid: React.FC<RenderGripProps> = ({ idParent, slice }) => {
-  console.log('🚀 ~ slice:', slice);
   const { apiData, addApiData } = useApiCallStore((state) => state);
   const [childs, setChilds] = useState<GridItem[]>(slice?.childs || []);
   const [isLoading, setIsLoading] = useState(false);
