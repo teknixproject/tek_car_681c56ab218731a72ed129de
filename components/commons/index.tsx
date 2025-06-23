@@ -23,4 +23,5 @@ export const components = {
   Verhicles: dynamic(() => import("./Verhicles")),
   Schedules: dynamic(() => import("./Schedules")),
   Billings: dynamic(() => import("./Billings")),
+  LogoDemo: dynamic(() => import("./LogoDemo")),
 };
