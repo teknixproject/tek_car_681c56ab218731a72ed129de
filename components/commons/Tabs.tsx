@@ -10,13 +10,12 @@ import { RenderSlice } from '../grid-systems';
 
 interface TabsProps {
   id: string;
-  style?: any;
   data?: any;
   childs?: any[];
   menuClassDropdow?: any;
 }
 
-const Tabs = ({ id, style = '', data = {}, childs = [] }: TabsProps) => {
+const Tabs = ({ id, data = {}, childs = [] }: TabsProps) => {
   const [activeTab, setActiveTab] = useState<string>();
 
   const tabs = _.get(data, 'dataSlice.tabs');
@@ -33,7 +32,7 @@ const Tabs = ({ id, style = '', data = {}, childs = [] }: TabsProps) => {
   }, [activeTab, tabs]);
 
   return (
-    <div style={{ ...style, width: '100%' }}>
+    <div style={{ width: '100%' }}>
       {/* Tab headers */}
       <TabHeader tabs={tabs} activeTab={activeTab} handleActiveTab={handleActiveTab} />
 
@@ -62,8 +61,6 @@ const TabHeader = ({
     <div
       style={{
         display: 'flex',
-        borderBottom: '1px solid #ddd',
-        marginBottom: '10px',
       }}
     >
       {tabs.map((tab: any, index: number) => (

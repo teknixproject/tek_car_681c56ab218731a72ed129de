@@ -19,11 +19,6 @@ export const components = {
   Table: dynamic(() => import('./Table')),
   LoginForm: dynamic(() => import('./LoginForm')),
   ListDrivers: dynamic(() => import('./ListDrivers')),
-  ListCar: dynamic(() => import("./ListCar")),
-  Verhicles: dynamic(() => import("./Verhicles")),
-  Schedules: dynamic(() => import("./Schedules")),
-  Billings: dynamic(() => import("./Billings")),
-  LogoDemo: dynamic(() => import("./LogoDemo")),
-  Detail1: dynamic(() => import("./Detail1")),
-  Detail2: dynamic(() => import("./Detail2")),
+  Grid: dynamic(() => import('./Box')),
+  Flex: dynamic(() => import('./Box')),
 };

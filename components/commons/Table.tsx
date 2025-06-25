@@ -1,14 +1,17 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
 import _ from 'lodash';
-import React, { memo } from 'react';
-import { RenderGrid, RenderSlice } from '../grid-systems';
+import { memo } from 'react';
+
+import { RenderSlice } from '../grid-systems';
+import { StyleBox } from './StyleBox';
 
 interface TableProps {
   id?: string;
-  style?: any;
   data?: any;
   styleDevice?: string;
+  [key: string]: unknown;
 }
 
 const optionsRender: any = {
@@ -17,7 +20,7 @@ const optionsRender: any = {
   tfoot: 'footers',
 };
 
-const Table = ({ data = {}, styleDevice }: TableProps) => {
+const Table = ({ data = {}, styleDevice, ...props }: TableProps) => {
   const tableConstructor = _.get(data, 'dataSlice.table');
 
   const styleTable = data?.dataSlice?.table?.style_table || {};
@@ -75,13 +78,15 @@ const Table = ({ data = {}, styleDevice }: TableProps) => {
 
   return !_.isEmpty(tableConstructor) ? (
     <>
-      <table
+      <StyleBox
+        as={'table'}
         style={{
           ...styleTable,
           borderCollapse: 'separate',
           borderSpacing: 0,
           borderRadius: styleTable?.borderRadius,
         }}
+        styledComponentCss={data?.styledComponentCss}
         className="w-full font-sans text-sm"
       >
         {_.map(tableConstructor?.sectionOrder, (s, sectionIndex) => {
@@ -223,11 +228,11 @@ const Table = ({ data = {}, styleDevice }: TableProps) => {
                               {/* Sử dụng RenderGrid cho tfoot như code gốc */}
                               {cell?.childs && cell.childs.length > 0 ? (
                                 _.map(cell.childs, (item) => (
-                                  <RenderGrid
+                                  <RenderSlice
                                     key={item.id}
                                     slice={item}
                                     idParent={row?.id}
-                                    items={[item]}
+                                    // items={[item]}
                                   />
                                 ))
                               ) : (
@@ -246,7 +251,7 @@ const Table = ({ data = {}, styleDevice }: TableProps) => {
             );
           }
         })}
-      </table>
+      </StyleBox>
     </>
   ) : (
     <div className="flex items-center justify-center h-full">
